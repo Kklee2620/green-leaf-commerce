@@ -1,15 +1,7 @@
 
 import React, { createContext, useState, useContext } from 'react';
 import { toast } from "sonner";
-
-export type CartItem = {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
-};
+import { CartItem, Cart } from "@/types";
 
 export type CartContextType = {
   items: CartItem[];
@@ -19,17 +11,32 @@ export type CartContextType = {
   clearCart: () => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
+  // New properties for drawer
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
+  cart: Cart;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  // Calculate subtotal whenever items change
+  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  
+  // Create cart object that matches the Cart type
+  const cart: Cart = {
+    items,
+    subtotal
+  };
 
   const addToCart = (item: CartItem) => {
     setItems((prevItems) => {
-      // Check if item already exists
-      const existingItemIndex = prevItems.findIndex((i) => i.id === item.id);
+      // Check if item already exists by productId (not id)
+      const existingItemIndex = prevItems.findIndex((i) => i.productId === item.productId);
       
       if (existingItemIndex > -1) {
         // Update quantity of existing item
@@ -80,6 +87,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getTotalItems = () => {
     return items.reduce((total, item) => total + item.quantity, 0);
   };
+  
+  const openCart = () => {
+    setIsCartOpen(true);
+  };
+  
+  const closeCart = () => {
+    setIsCartOpen(false);
+  };
 
   return (
     <CartContext.Provider
@@ -90,7 +105,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         removeFromCart,
         clearCart,
         getTotalPrice,
-        getTotalItems
+        getTotalItems,
+        isCartOpen,
+        openCart,
+        closeCart,
+        cart
       }}
     >
       {children}

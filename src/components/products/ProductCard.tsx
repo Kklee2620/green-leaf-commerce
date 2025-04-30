@@ -5,6 +5,7 @@ import { ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { formatCurrency } from "@/utils/format";
 import { nanoid } from 'nanoid';
+import { Product } from "@/types";
 
 interface ProductCardProps {
   id: string;
@@ -14,8 +15,16 @@ interface ProductCardProps {
   slug: string;
 }
 
-const ProductCard = ({ id, name, price, imageUrl, slug }: ProductCardProps) => {
+// Add an alternative constructor that accepts a product object
+const ProductCard = (props: ProductCardProps | { product: Product }) => {
   const { addToCart } = useCart();
+
+  // Extract properties based on whether we received a product object or individual props
+  const id = 'product' in props ? props.product.id : props.id;
+  const name = 'product' in props ? props.product.name : props.name;
+  const price = 'product' in props ? props.product.price : props.price;
+  const imageUrl = 'product' in props ? props.product.imageUrl : props.imageUrl;
+  const slug = 'product' in props ? props.product.slug : props.slug;
 
   const handleAddToCart = () => {
     addToCart({

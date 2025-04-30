@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -6,36 +5,28 @@ import { useCart } from "@/contexts/CartContext";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { formatCurrency } from "@/utils/format";
 import { Home, Minus, Plus, X, ShoppingBag } from "lucide-react";
 
 export default function Cart() {
-  const { cart, updateCartItemQuantity, removeCartItem } = useCart();
+  const { items, updateQuantity, removeFromCart, getTotalPrice } = useCart();
   const [couponCode, setCouponCode] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    updateCartItemQuantity(itemId, newQuantity);
+    updateQuantity(itemId, newQuantity);
   };
   
   const handleRemoveItem = (itemId: string) => {
-    removeCartItem(itemId);
-    toast({
-      title: "Đã xóa sản phẩm",
-      description: "Sản phẩm đã được xóa khỏi giỏ hàng.",
-    });
+    removeFromCart(itemId);
   };
   
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponCode.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập mã giảm giá.",
-        variant: "destructive"
-      });
+      toast.error("Vui lòng nhập mã giảm giá.");
       return;
     }
     
@@ -47,22 +38,15 @@ export default function Cart() {
       
       // Simulate coupon validation (in a real app, this would be done on the server)
       if (couponCode.toUpperCase() === "GIAMGIA10") {
-        toast({
-          title: "Áp dụng mã giảm giá thành công",
-          description: "Bạn được giảm 10% tổng đơn hàng.",
-        });
+        toast.success("Áp dụng mã giảm giá thành công. Bạn được giảm 10% tổng đơn hàng.");
       } else {
-        toast({
-          title: "Mã giảm giá không hợp lệ",
-          description: "Vui lòng kiểm tra lại hoặc thử mã khác.",
-          variant: "destructive"
-        });
+        toast.error("Mã giảm giá không hợp lệ. Vui lòng kiểm tra lại hoặc thử mã khác.");
       }
     }, 800);
   };
   
   // Calculate cart totals
-  const subtotal = cart.subtotal;
+  const subtotal = getTotalPrice();
   const shipping = subtotal > 300000 ? 0 : 30000; // Free shipping over 300k
   const discount = 0; // In a real app, this would be calculated based on applied coupons
   const total = subtotal + shipping - discount;
@@ -88,7 +72,7 @@ export default function Cart() {
         
         <h1 className="text-2xl md:text-3xl font-bold mb-6">Giỏ hàng của bạn</h1>
         
-        {cart.items.length === 0 ? (
+        {items.length === 0 ? (
           <div className="text-center py-12">
             <div className="flex justify-center mb-4">
               <ShoppingBag className="h-16 w-16 text-gray-300" />
@@ -111,7 +95,7 @@ export default function Cart() {
                   <div className="col-span-2 text-center">Tổng</div>
                 </div>
                 
-                {cart.items.map(item => (
+                {items.map(item => (
                   <div key={item.id} className="border-b last:border-b-0 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                       {/* Product info */}

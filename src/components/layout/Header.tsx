@@ -5,7 +5,7 @@ import { Search, User, ShoppingBag, Heart, Menu, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 
 export default function Header() {
-  const { cart, openCart } = useCart();
+  const { items, openCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -63,9 +63,9 @@ export default function Header() {
               className="text-gray-700 hover:text-primary relative"
             >
               <ShoppingBag size={24} />
-              {cart.items.length > 0 && (
+              {items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                  {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
+                  {items.reduce((sum, item) => sum + item.quantity, 0)}
                 </span>
               )}
             </button>

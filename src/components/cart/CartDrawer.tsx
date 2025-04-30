@@ -6,7 +6,7 @@ import CartItem from "./CartItem";
 import { formatCurrency } from "@/utils/format";
 
 export default function CartDrawer() {
-  const { cart, isCartOpen, closeCart } = useCart();
+  const { items, isCartOpen, closeCart, getTotalPrice } = useCart();
   
   return (
     <>
@@ -30,7 +30,7 @@ export default function CartDrawer() {
             <ShoppingBag className="mr-2" size={20} />
             Giỏ hàng
             <span className="ml-2 text-sm font-normal text-gray-500">
-              ({cart.items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm)
+              ({items.reduce((sum, item) => sum + item.quantity, 0)} sản phẩm)
             </span>
           </h2>
           <button
@@ -43,7 +43,7 @@ export default function CartDrawer() {
         
         {/* Content */}
         <div className="flex flex-col h-[calc(100%-8rem)]">
-          {cart.items.length === 0 ? (
+          {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-4">
               <ShoppingBag className="text-gray-300 mb-4" size={64} />
               <p className="text-gray-500 mb-4">Giỏ hàng của bạn đang trống</p>
@@ -56,7 +56,7 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="flex-1 overflow-auto p-4">
-              {cart.items.map(item => (
+              {items.map(item => (
                 <CartItem key={item.id} item={item} />
               ))}
             </div>
@@ -64,11 +64,11 @@ export default function CartDrawer() {
         </div>
         
         {/* Footer */}
-        {cart.items.length > 0 && (
+        {items.length > 0 && (
           <div className="border-t p-4">
             <div className="flex justify-between mb-4">
               <span className="font-medium">Tạm tính:</span>
-              <span className="font-bold">{formatCurrency(cart.subtotal)}</span>
+              <span className="font-bold">{formatCurrency(getTotalPrice())}</span>
             </div>
             <div className="space-y-2">
               <Link 
