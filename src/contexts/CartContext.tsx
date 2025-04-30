@@ -1,107 +1,107 @@
 
-import { createContext, useState, useContext, ReactNode } from "react";
-import { Cart, CartItem } from "@/types";
+import React, { createContext, useState, useContext } from 'react';
+import { toast } from "sonner";
 
-interface CartContextType {
-  cart: Cart;
-  isCartOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
+export type CartItem = {
+  id: string;
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  imageUrl: string;
+};
+
+export type CartContextType = {
+  items: CartItem[];
   addToCart: (item: CartItem) => void;
-  updateCartItemQuantity: (itemId: string, quantity: number) => void;
-  removeCartItem: (itemId: string) => void;
-}
+  updateQuantity: (id: string, quantity: number) => void;
+  removeFromCart: (id: string) => void;
+  clearCart: () => void;
+  getTotalPrice: () => number;
+  getTotalItems: () => number;
+};
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const CartContext = createContext<CartContextType | null>(null);
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<Cart>({
-    items: [],
-    subtotal: 0
-  });
-  
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  
-  const calculateSubtotal = (items: CartItem[]): number => {
-    return items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  };
-  
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
-  
-  const addToCart = (newItem: CartItem) => {
-    setCart(prevCart => {
-      // Check if the item already exists in the cart
-      const existingItemIndex = prevCart.items.findIndex(item => item.productId === newItem.productId);
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [items, setItems] = useState<CartItem[]>([]);
+
+  const addToCart = (item: CartItem) => {
+    setItems((prevItems) => {
+      // Check if item already exists
+      const existingItemIndex = prevItems.findIndex((i) => i.id === item.id);
       
-      let updatedItems: CartItem[];
-      
-      if (existingItemIndex >= 0) {
-        // Update quantity if item exists
-        updatedItems = [...prevCart.items];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity: updatedItems[existingItemIndex].quantity + newItem.quantity
-        };
+      if (existingItemIndex > -1) {
+        // Update quantity of existing item
+        const newItems = [...prevItems];
+        newItems[existingItemIndex].quantity += item.quantity;
+        toast.success(`Cập nhật số lượng ${item.name} trong giỏ hàng!`);
+        return newItems;
       } else {
-        // Add new item if it doesn't exist
-        updatedItems = [...prevCart.items, newItem];
+        // Add new item
+        toast.success(`Đã thêm ${item.name} vào giỏ hàng!`);
+        return [...prevItems, item];
       }
-      
-      return {
-        items: updatedItems,
-        subtotal: calculateSubtotal(updatedItems)
-      };
     });
-    
-    openCart();
   };
-  
-  const updateCartItemQuantity = (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
+
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
     
-    setCart(prevCart => {
-      const updatedItems = prevCart.items.map(item => 
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
+    setItems((prevItems) => {
+      return prevItems.map((item) => 
+        item.id === id ? { ...item, quantity } : item
       );
-      
-      return {
-        items: updatedItems,
-        subtotal: calculateSubtotal(updatedItems)
-      };
     });
   };
-  
-  const removeCartItem = (itemId: string) => {
-    setCart(prevCart => {
-      const updatedItems = prevCart.items.filter(item => item.id !== itemId);
-      
-      return {
-        items: updatedItems,
-        subtotal: calculateSubtotal(updatedItems)
-      };
+
+  const removeFromCart = (id: string) => {
+    setItems((prevItems) => {
+      const itemToRemove = prevItems.find(item => item.id === id);
+      if (itemToRemove) {
+        toast.success(`Đã xóa ${itemToRemove.name} khỏi giỏ hàng`);
+      }
+      return prevItems.filter((item) => item.id !== id);
     });
   };
-  
+
+  const clearCart = () => {
+    setItems([]);
+    toast.success("Giỏ hàng đã được xóa");
+  };
+
+  const getTotalPrice = () => {
+    return items.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const getTotalItems = () => {
+    return items.reduce((total, item) => total + item.quantity, 0);
+  };
+
   return (
-    <CartContext.Provider value={{
-      cart,
-      isCartOpen,
-      openCart,
-      closeCart,
-      addToCart,
-      updateCartItemQuantity,
-      removeCartItem
-    }}>
+    <CartContext.Provider
+      value={{
+        items,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        getTotalPrice,
+        getTotalItems
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
-}
+};
 
 export const useCart = () => {
   const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error("useCart must be used within a CartProvider");
+  if (context === null) {
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };
