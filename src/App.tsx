@@ -17,6 +17,12 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import ReturnPolicy from "./pages/ReturnPolicy";
 import PaymentPolicy from "./pages/PaymentPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
+import AdminCategories from "./pages/admin/Categories";
+import AdminCustomers from "./pages/admin/Customers";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +46,16 @@ const App = () => (
             <Route path="/return-policy" element={<ReturnPolicy />} />
             <Route path="/payment-policy" element={<PaymentPolicy />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="customers" element={<AdminCustomers />} />
+            </Route>
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
