@@ -1,45 +1,38 @@
 
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import Layout from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Home, Minus, Plus, Heart, Share2, Check, AlertTriangle, Truck } from "lucide-react";
-import { mockFeaturedProducts } from "@/utils/mockData";
+import { Home, Minus, Plus, Heart, Share2, Check, AlertTriangle, Truck, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import { Product } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
+import { useProductBySlug, useRelatedProducts } from "@/hooks/useProducts";
+import { nanoid } from "nanoid";
 
 export default function ProductDetail() {
-  const { slug } = useParams();
-  const { cart, addToCart } = useCart();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { slug } = useParams<{slug: string}>();
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   
-  // Simulate API call
-  useEffect(() => {
-    setIsLoading(true);
-    // In a real app, fetch from API using slug
-    setTimeout(() => {
-      const foundProduct = mockFeaturedProducts.find(p => p.slug === slug);
-      if (foundProduct) {
-        setProduct(foundProduct);
-        // Get 4 related products excluding the current one
-        setRelatedProducts(
-          mockFeaturedProducts
-            .filter(p => p.id !== foundProduct.id)
-            .slice(0, 4)
-        );
-      }
-      setIsLoading(false);
-    }, 500);
-  }, [slug]);
+  // Fetch product data
+  const { 
+    data: product, 
+    isLoading: isProductLoading, 
+    error: productError 
+  } = useProductBySlug(slug || '');
+  
+  // Fetch related products once we have the product id
+  const { 
+    data: relatedProducts = [], 
+    isLoading: isRelatedLoading 
+  } = useRelatedProducts(product?.id || '');
   
   const incrementQuantity = () => {
     setQuantity(prev => prev + 1);
@@ -53,7 +46,7 @@ export default function ProductDetail() {
     if (!product) return;
     
     addToCart({
-      id: `cart-${Date.now()}`,
+      id: nanoid(),
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -74,7 +67,7 @@ export default function ProductDetail() {
     });
   };
   
-  if (isLoading) {
+  if (isProductLoading) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
@@ -93,7 +86,7 @@ export default function ProductDetail() {
     );
   }
   
-  if (!product) {
+  if (productError || !product) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
@@ -386,11 +379,19 @@ export default function ProductDetail() {
         {/* Related products */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6">Sản phẩm liên quan</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {relatedProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {isRelatedLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-gray-100 rounded-md p-4 h-72 animate-pulse"></div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((product: Product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </Layout>

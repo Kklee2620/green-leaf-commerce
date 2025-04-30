@@ -15,24 +15,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { isAdmin, isAuthenticated, logout, isLoading } = useAuth();
   
-  // Fake authentication check - in a real app would check if user is admin
+  // Xác thực admin
   useEffect(() => {
-    // Check if user is logged in as admin
-    const isAdmin = localStorage.getItem("isAdmin");
-    if (!isAdmin) {
-      // Redirect to login if not admin
-      // navigate("/login");
-      
-      // For demo purposes, we'll just set them as admin
-      localStorage.setItem("isAdmin", "true");
+    if (!isLoading && (!isAuthenticated || !isAdmin)) {
+      toast.error('Bạn không có quyền truy cập trang quản trị.');
+      navigate('/login');
     }
-  }, [navigate]);
+  }, [isAdmin, isAuthenticated, isLoading, navigate]);
+  
+  // Nếu đang kiểm tra trạng thái xác thực, hiển thị loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   const menuItems = [
     { label: "Tổng quan", path: "/admin", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -42,6 +49,10 @@ export default function AdminLayout() {
     { label: "Khách hàng", path: "/admin/customers", icon: <Users className="h-5 w-5" /> },
     { label: "Cài đặt", path: "/admin/settings", icon: <Settings className="h-5 w-5" /> },
   ];
+  
+  const handleLogout = () => {
+    logout();
+  };
   
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
@@ -94,10 +105,7 @@ export default function AdminLayout() {
           <Button
             variant="ghost"
             className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600"
-            onClick={() => {
-              localStorage.removeItem("isAdmin");
-              navigate("/");
-            }}
+            onClick={handleLogout}
           >
             <LogOut className="mr-2 h-5 w-5" />
             Đăng xuất
