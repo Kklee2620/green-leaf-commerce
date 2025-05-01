@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   ShoppingBag,
   Users,
@@ -26,7 +27,7 @@ export default function AdminDashboard() {
   }
   
   if (error) {
-    return <DashboardErrorState onRetry={() => window.location.reload()} />;
+    return <DashboardErrorState onRetry={() => refetch()} error={error} />;
   }
 
   const statsCards = [
