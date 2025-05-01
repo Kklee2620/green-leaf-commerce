@@ -1,46 +1,31 @@
 
 import { useState, useEffect } from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
-} from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogClose
-} from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Search, Eye, User, UserPlus, Mail, Phone, MapPin, Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import CustomersTable from "@/components/admin/customers/CustomersTable";
+
+interface RecentOrder {
+  id: string;
+  date: string;
+  amount: number;
+  status: string;
+}
+
+interface Customer {
+  id: number | string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  dateJoined: string;
+  status: string;
+  orderCount: number;
+  totalSpent: number;
+  recentOrders: RecentOrder[];
+}
 
 export default function AdminCustomers() {
-  const [customers, setCustomers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   
   // Giả lập dữ liệu khách hàng
   useEffect(() => {
@@ -132,40 +117,13 @@ export default function AdminCustomers() {
     }, 1000);
   }, []);
   
-  // Xử lý lọc khách hàng
-  const filteredCustomers = customers.filter(customer => {
-    // Lọc theo từ khóa tìm kiếm
-    const matchesSearch = 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm);
-    
-    // Lọc theo trạng thái
-    const matchesStatus = statusFilter === "all" || customer.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-  
   // Cập nhật trạng thái khách hàng
-  const updateCustomerStatus = (customerId, newStatus) => {
+  const updateCustomerStatus = (customerId: number | string, newStatus: string) => {
     setCustomers(customers.map(customer => 
       customer.id === customerId ? { ...customer, status: newStatus } : customer
     ));
     
     toast.success(`Đã cập nhật trạng thái khách hàng thành "${newStatus === 'active' ? 'Hoạt động' : 'Không hoạt động'}"`);
-    
-    // Cập nhật khách hàng đang xem nếu đang mở dialog
-    if (selectedCustomer && selectedCustomer.id === customerId) {
-      setSelectedCustomer({ ...selectedCustomer, status: newStatus });
-    }
-  };
-
-  // Format giá tiền
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(value);
   };
 
   return (
@@ -175,252 +133,11 @@ export default function AdminCustomers() {
         <p className="text-gray-500">Quản lý thông tin và đơn hàng của khách hàng</p>
       </div>
       
-      {/* Tìm kiếm và lọc */}
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Select 
-          defaultValue="all" 
-          onValueChange={(value) => setStatusFilter(value)}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Tất cả trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="active">Hoạt động</SelectItem>
-            <SelectItem value="inactive">Không hoạt động</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {/* Danh sách khách hàng */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách khách hàng</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Khách hàng</TableHead>
-                <TableHead>Liên hệ</TableHead>
-                <TableHead>Ngày tham gia</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead>Đơn hàng</TableHead>
-                <TableHead>Tổng chi tiêu</TableHead>
-                <TableHead className="text-right">Thao tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">
-                    Đang tải dữ liệu...
-                  </TableCell>
-                </TableRow>
-              ) : filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          {customer.name}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{customer.email}</div>
-                      <div className="text-sm text-gray-500">{customer.phone}</div>
-                    </TableCell>
-                    <TableCell>{customer.dateJoined}</TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "px-2 py-1 rounded-full text-xs font-medium",
-                        customer.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                      )}>
-                        {customer.status === "active" ? "Hoạt động" : "Không hoạt động"}
-                      </span>
-                    </TableCell>
-                    <TableCell>{customer.orderCount}</TableCell>
-                    <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
-                    <TableCell className="text-right">
-                      <Dialog onOpenChange={(open) => open && setSelectedCustomer(customer)}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Chi tiết
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle>Thông tin khách hàng</DialogTitle>
-                          </DialogHeader>
-                          
-                          {selectedCustomer && (
-                            <div className="space-y-6 mt-4">
-                              {/* Thông tin khách hàng */}
-                              <div className="bg-gray-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-4 mb-4">
-                                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <User className="h-8 w-8 text-primary" />
-                                  </div>
-                                  <div>
-                                    <h3 className="text-xl font-semibold">{selectedCustomer.name}</h3>
-                                    <p className={cn(
-                                      "px-2 py-0.5 rounded-full text-xs font-medium w-fit mt-1",
-                                      selectedCustomer.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-                                    )}>
-                                      {selectedCustomer.status === "active" ? "Hoạt động" : "Không hoạt động"}
-                                    </p>
-                                  </div>
-                                  
-                                  <div className="ml-auto">
-                                    {selectedCustomer.status === "active" ? (
-                                      <Button 
-                                        variant="outline" 
-                                        onClick={() => updateCustomerStatus(selectedCustomer.id, "inactive")}
-                                        className="text-red-500"
-                                      >
-                                        Vô hiệu hóa
-                                      </Button>
-                                    ) : (
-                                      <Button 
-                                        variant="outline" 
-                                        onClick={() => updateCustomerStatus(selectedCustomer.id, "active")}
-                                        className="text-green-500"
-                                      >
-                                        Kích hoạt
-                                      </Button>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="h-4 w-4 text-gray-500" />
-                                    <span>{selectedCustomer.email}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Phone className="h-4 w-4 text-gray-500" />
-                                    <span>{selectedCustomer.phone}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <MapPin className="h-4 w-4 text-gray-500" />
-                                    <span>{selectedCustomer.address}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-gray-500" />
-                                    <span>Tham gia ngày {selectedCustomer.dateJoined}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Thống kê */}
-                              <div className="grid grid-cols-3 gap-4">
-                                <Card>
-                                  <CardContent className="pt-6">
-                                    <div className="text-sm text-gray-500">Tổng đơn hàng</div>
-                                    <div className="text-2xl font-bold">{selectedCustomer.orderCount}</div>
-                                  </CardContent>
-                                </Card>
-                                <Card>
-                                  <CardContent className="pt-6">
-                                    <div className="text-sm text-gray-500">Tổng chi tiêu</div>
-                                    <div className="text-2xl font-bold">{formatCurrency(selectedCustomer.totalSpent)}</div>
-                                  </CardContent>
-                                </Card>
-                                <Card>
-                                  <CardContent className="pt-6">
-                                    <div className="text-sm text-gray-500">Trung bình/đơn</div>
-                                    <div className="text-2xl font-bold">
-                                      {formatCurrency(selectedCustomer.totalSpent / (selectedCustomer.orderCount || 1))}
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              </div>
-                              
-                              {/* Đơn hàng gần đây */}
-                              <div>
-                                <h3 className="font-medium mb-2">Đơn hàng gần đây</h3>
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Mã đơn hàng</TableHead>
-                                      <TableHead>Ngày đặt</TableHead>
-                                      <TableHead>Trạng thái</TableHead>
-                                      <TableHead className="text-right">Giá trị</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {selectedCustomer.recentOrders.map((order) => (
-                                      <TableRow key={order.id}>
-                                        <TableCell className="font-medium">{order.id}</TableCell>
-                                        <TableCell>{order.date}</TableCell>
-                                        <TableCell>
-                                          <span className={cn(
-                                            "px-2 py-0.5 rounded-full text-xs font-medium",
-                                            order.status === "Đã giao" && "bg-green-100 text-green-800",
-                                            order.status === "Đang xử lý" && "bg-blue-100 text-blue-800",
-                                            order.status === "Đang vận chuyển" && "bg-yellow-100 text-yellow-800",
-                                            order.status === "Đã hủy" && "bg-red-100 text-red-800"
-                                          )}>
-                                            {order.status}
-                                          </span>
-                                        </TableCell>
-                                        <TableCell className="text-right">{formatCurrency(order.amount)}</TableCell>
-                                      </TableRow>
-                                    ))}
-                                    {selectedCustomer.recentOrders.length === 0 && (
-                                      <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                                          Khách hàng chưa có đơn hàng nào
-                                        </TableCell>
-                                      </TableRow>
-                                    )}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                              
-                              {/* Các action */}
-                              <div className="flex justify-end gap-2 pt-4">
-                                <Button variant="outline" onClick={() => toast.info("Chức năng đang phát triển")}>
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Gửi email
-                                </Button>
-                                <DialogClose asChild>
-                                  <Button>Đóng</Button>
-                                </DialogClose>
-                              </div>
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-gray-500">
-                    Không tìm thấy khách hàng nào
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <CustomersTable 
+        customers={customers} 
+        isLoading={isLoading}
+        onUpdateStatus={updateCustomerStatus}
+      />
     </div>
   );
 }
