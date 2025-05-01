@@ -1,4 +1,3 @@
-
 import {
   Card,
   CardContent,
@@ -22,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useDashboardStats } from "@/hooks/useDashboard";
 import { formatCurrency } from "@/utils/format";
 
