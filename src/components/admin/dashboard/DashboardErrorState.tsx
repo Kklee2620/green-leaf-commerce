@@ -13,9 +13,12 @@ const DashboardErrorState = ({ onRetry, error }: DashboardErrorStateProps) => {
   const errorMessage = error instanceof Error 
     ? error.message 
     : "Không thể tải thông tin thống kê";
+  
+  // Tạo mã lỗi ngẫu nhiên để theo dõi
+  const errorCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
   return (
-    <div className="bg-white border border-red-200 rounded-lg p-6 text-center max-w-lg mx-auto my-8">
+    <div className="bg-white shadow-md border border-red-100 rounded-lg p-6 text-center max-w-lg mx-auto my-8 animate-fade-in">
       <div className="flex justify-center mb-4">
         <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
           <AlertCircle className="h-6 w-6 text-red-500" />
@@ -46,7 +49,7 @@ const DashboardErrorState = ({ onRetry, error }: DashboardErrorStateProps) => {
       </div>
       
       <div className="mt-4 text-xs text-gray-500 border-t border-gray-200 pt-4">
-        Mã lỗi: {Math.random().toString(36).substring(2, 10).toUpperCase()}
+        Mã lỗi: {errorCode}
       </div>
     </div>
   );

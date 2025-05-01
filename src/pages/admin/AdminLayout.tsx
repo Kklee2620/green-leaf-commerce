@@ -55,68 +55,150 @@ export default function AdminLayout() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-      {/* Mobile sidebar toggle */}
-      <div className="md:hidden p-4 bg-white border-b flex justify-between items-center">
-        <Link to="/" className="text-primary font-bold text-lg">GreenLeaf Admin</Link>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          {isSidebarOpen ? <X /> : <Menu />}
-        </Button>
-      </div>
-      
-      {/* Sidebar */}
-      <aside 
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar for larger screens */}
+      <aside
         className={cn(
-          "bg-white border-r w-64 transition-all duration-300 ease-in-out",
-          isSidebarOpen ? "block" : "hidden md:block"
+          "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out h-screen fixed lg:sticky top-0 z-40",
+          isSidebarOpen ? "w-64" : "w-20",
+          "hidden md:block"
         )}
       >
-        <div className="p-4 hidden md:flex">
-          <Link to="/" className="text-primary font-bold text-lg">GreenLeaf Admin</Link>
-        </div>
-        
-        <Separator />
-        
-        <nav className="p-4 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                location.pathname === item.path
-                  ? "bg-primary text-white"
-                  : "text-gray-700 hover:bg-gray-100"
-              )}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        
-        <Separator />
-        
-        <div className="p-4">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+          <div className={cn("flex items-center", isSidebarOpen ? "" : "justify-center w-full")}>
+            {isSidebarOpen ? (
+              <Link to="/" className="font-bold text-xl text-primary">
+                Admin Panel
+              </Link>
+            ) : (
+              <Link to="/" className="font-bold text-xl text-primary">
+                AP
+              </Link>
+            )}
+          </div>
           <Button
             variant="ghost"
-            className="w-full justify-start text-red-500 hover:bg-red-50 hover:text-red-600"
+            size="icon"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hidden md:flex"
+          >
+            {isSidebarOpen ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+        <div className="py-4">
+          <nav className="space-y-1 px-2">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors",
+                  location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 hover:bg-gray-100",
+                  isSidebarOpen ? "justify-start" : "justify-center"
+                )}
+              >
+                {item.icon}
+                {isSidebarOpen && <span className="ml-3">{item.label}</span>}
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <div className="absolute bottom-0 w-full border-t border-gray-200 p-4">
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex items-center w-full text-red-500 hover:text-red-700 hover:bg-red-50",
+              isSidebarOpen ? "justify-start" : "justify-center"
+            )}
             onClick={handleLogout}
           >
-            <LogOut className="mr-2 h-5 w-5" />
-            Đăng xuất
+            <LogOut className="h-5 w-5" />
+            {isSidebarOpen && <span className="ml-2">Đăng xuất</span>}
           </Button>
         </div>
       </aside>
-      
+
+      {/* Mobile sidebar */}
+      <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" 
+           style={{ display: isSidebarOpen ? "block" : "none" }}
+           onClick={() => setIsSidebarOpen(false)}>
+        <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg p-4"
+             onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/" className="font-bold text-xl text-primary">
+              Admin Panel
+            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <nav className="space-y-1">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center px-2 py-3 text-sm font-medium rounded-md",
+                  location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+                    ? "bg-primary/10 text-primary"
+                    : "text-gray-600 hover:bg-gray-100"
+                )}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                {item.icon}
+                <span className="ml-3">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+          <div className="absolute bottom-0 w-full left-0 border-t border-gray-200 p-4">
+            <Button
+              variant="ghost"
+              className="flex items-center w-full text-red-500 hover:text-red-700 hover:bg-red-50"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="ml-2">Đăng xuất</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {/* Main content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <Outlet />
-      </main>
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+          <div className="px-4 h-16 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 md:text-center text-right">
+              <h2 className="text-lg font-semibold text-gray-800">
+                {menuItems.find(
+                  item => item.path === location.pathname || location.pathname.startsWith(`${item.path}/`)
+                )?.label || 'Trang quản trị'}
+              </h2>
+            </div>
+          </div>
+        </header>
+        
+        <main className="p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
